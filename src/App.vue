@@ -1,19 +1,27 @@
 <template>
-  <div id="app">
+  <div id="app" :class="background">
     <main>
       <div class="search-box">
-        <input type="text" class="search-bar" placeholder="Search " />
+        <input
+          type="text"
+          class="search-bar"
+          placeholder="Search "
+          v-model="query"
+          @keypress="fetchMaker"
+        />
       </div>
 
-      <div class="weather-wrap">
+      <div class="weather-wrap" v-if="typeof weather.main != 'undefined'">
         <div class="location-box">
-          <div class="location">Toshima-ku, JP</div>
-          <div class="date">Monday 28 September 2020</div>
+          <div class="location">
+            {{ weather.name }}, {{ weather.sys.country }}
+          </div>
+          <div class="date">{{ givenDate() }}</div>
         </div>
 
         <div class="weather-box">
-          <div class="temp">27°C</div>
-          <div class="weather"></div>
+          <div class="temp">{{ `${Math.round(weather.main.temp)} °C` }}</div>
+          <div class="weather">{{ weather.weather[0].description }}</div>
         </div>
       </div>
     </main>
@@ -24,7 +32,73 @@
 export default {
   name: "App",
   data: () => {
-    return {};
+    return {
+      query: "",
+      weather: {},
+    };
+  },
+  methods: {
+    fetchMaker(element) {
+      if (element.key == "Enter") {
+        fetch(
+          `${this.base_url}weather?q=${this.query}&units=metric&APPID=${this.api_key}`
+        )
+          .then((res) => {
+            return res.json();
+          })
+          .then(this.givenResult);
+      }
+    },
+    givenResult(result) {
+      this.weather = result;
+    },
+    givenDate() {
+      let el = new Date();
+      const months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jul",
+        "Jun",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+
+      const weekDay = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+      let day = weekDay[el.getDay()];
+      let date = el.getDate();
+      let month = months[el.getMonth()];
+      let year = el.getFullYear();
+
+      return `${day} ${date} ${month} ${year}`;
+    },
+    background() {
+      if (
+        this.weather.main != "undefined" &&
+        this.weather.weather[0].description === "clear sky"
+      ) {
+        return "warm";
+      } else if (
+        (typeof this.weather.main != "undefined" &&
+          this.weather.weather[0].description === "shower rain" ||
+        this.weather.weather[0].description === "light rain")
+      ) {
+        return "shower-rain";
+      } else if (
+        typeof this.weather.main != "undefined" &&
+        this.weather.description === "rain"
+      ) {
+        return "rain";
+      } else {
+        return "";
+      }
+    },
   },
 };
 </script>
@@ -41,10 +115,22 @@ body {
 }
 
 #app {
-  background-image: url("./assets/seychelles.jpg");
+  background-image: url("./assets/winter-mountain.jpg");
   background-size: cover;
   background-position: bottom;
   transition: 0.4s;
+}
+
+#app.warm {
+  background-image: url("./assets/seychelles.jpg");
+}
+
+#app.rain {
+  background-image: url("./assets/rain.jpg");
+}
+
+#app.shower-rain {
+  background-image: url("./assets/rain.jpg");
 }
 
 main {
@@ -94,6 +180,18 @@ main {
   font-weight: 500;
   text-align: center;
   text-shadow: 1px, 3px rgba(0, 0, 0, 0.25);
+}
+
+.location-box .date {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 300px;
+  font-style: italic;
+  text-align: center;
+}
+
+weather-box {
+  text-align: center;
 }
 
 .weather-box .temp {
