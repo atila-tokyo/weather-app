@@ -34,13 +34,13 @@ export default {
   data() {
     return {
       query: "",
-      url: 'https://api.openweathermap.org/data/2.5/',
-      api_key: 'f45eec96406567a2ea35532d84d2dce1',
+      url: process.env.VUE_APP_BASE_URL,
+      api_key: process.env.VUE_APP_API_KEY,
       result: {
-        name:"",
-        sys:{country:""},
-        weather: [{description:""}],
-         main:{temp:""}
+      name:"",
+      sys:{country:""},
+      weather: [{description:""}],
+      main:{temp:""}
       },
       background: "clear sky",
     }
