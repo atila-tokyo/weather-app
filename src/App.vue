@@ -1,5 +1,5 @@
 <template>
-  <div id="app" :class="background">
+  <div id="app" v-bind:class="[background]">
     <main>
       <div class="search-box">
         <input
@@ -11,17 +11,17 @@
         />
       </div>
 
-      <div class="weather-wrap" v-if="typeof weather.main != 'undefined'">
+      <div class="weather-wrap" v-if="typeof result.main != undefined">
         <div class="location-box">
           <div class="location">
-            {{ weather.name }}, {{ weather.sys.country }}
+            {{ result.name }}, {{ result.sys.country }}
           </div>
           <div class="date">{{ givenDate() }}</div>
         </div>
 
         <div class="weather-box">
-          <div class="temp">{{ `${Math.round(weather.main.temp)} °C` }}</div>
-          <div class="weather">{{ weather.weather[0].description }}</div>
+          <div class="temp">{{ `${Math.round(result.main.temp)} °C` }}</div>
+          <div class="weather">{{ result.weather[0].description }}</div>
         </div>
       </div>
     </main>
@@ -31,17 +31,26 @@
 <script>
 export default {
   name: "App",
-  data: () => {
+  data() {
     return {
       query: "",
-      weather: {},
-    };
+      url: 'https://api.openweathermap.org/data/2.5/',
+      api_key: 'f45eec96406567a2ea35532d84d2dce1',
+      result: {
+        name:"",
+        sys:{country:""},
+        weather: [{description:""}],
+         main:{temp:""}
+      },
+      background: "clear sky",
+    }
   },
   methods: {
-    fetchMaker(element) {
+    fetchMaker (element) {
       if (element.key == "Enter") {
+        console.log(process.env.VUE_APP_BASE_URL);
         fetch(
-          `${this.base_url}weather?q=${this.query}&units=metric&APPID=${this.api_key}`
+          `${this.url}weather?q=${this.query}&units=metric&APPID=${this.api_key}`
         )
           .then((res) => {
             return res.json();
@@ -49,10 +58,13 @@ export default {
           .then(this.givenResult);
       }
     },
-    givenResult(result) {
-      this.weather = result;
+    givenResult (result) {
+      this.result = result;
+      console.log(this.getBackground());
+      this.background = this.getBackground();
+      
     },
-    givenDate() {
+    givenDate () {
       let el = new Date();
       const months = [
         "Jan",
@@ -78,21 +90,22 @@ export default {
 
       return `${day} ${date} ${month} ${year}`;
     },
-    background() {
+    getBackground () {
+
       if (
-        this.weather.main != "undefined" &&
-        this.weather.weather[0].description === "clear sky"
+        this.result.main != "undefined" &&
+        this.result.weather[0].main == "Clear"
       ) {
         return "warm";
       } else if (
-        (typeof this.weather.main != "undefined" &&
-          this.weather.weather[0].description === "shower rain" ||
-        this.weather.weather[0].description === "light rain")
+        (typeof this.result.main != "undefined" &&
+          this.result.weather[0].main == "shower rain" ||
+        this.result.weather[0].main == "light rain")
       ) {
         return "shower-rain";
       } else if (
-        typeof this.weather.main != "undefined" &&
-        this.weather.description === "rain"
+        typeof this.result.main != "undefined" &&
+        this.result.weather[0].main == "rain"
       ) {
         return "rain";
       } else {
